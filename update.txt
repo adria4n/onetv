@@ -1,4 +1,4 @@
 {
   "versionName": "2.0",
-  "apkurl": "https://adria4n.github.io/onetv/onetv-1.0.apk"
+  "apkurl": "https://adria4n.github.io/onetv/onetv.apk"
 }
