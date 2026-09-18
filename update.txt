@@ -1,5 +1,4 @@
 {
   "version": "1.0",
-  "apkurl": "https://adria4n.github.io/onetv/onetv-1.0.apk",
-  "whatsapp": "22 9105 8930"
+  "apkurl": "https://adria4n.github.io/onetv/onetv-1.0.apk"
 }
