@@ -1,6 +1,5 @@
 {
   "version": "1.0",
   "apkurl": "https://adria4n.github.io/onetv/onetv-1.0.apk",
-  "obligatorio": "no",
   "whatsapp": "22 9105 8930"
 }
