@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "apkurl": "https://github.com/fogertycapiata/plus/raw/refs/heads/main/FemonPlay-16.6-Produccion-Firmado.apk",
+  "apkurl": "https://adria4n.github.io/onetv/onetv-1.0.apk",
   "obligatorio": "no",
   "whatsapp": "22 9105 8930"
 }
