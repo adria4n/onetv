@@ -1,0 +1,6 @@
+{
+  "version": "1.0",
+  "apkurl": "https://github.com/fogertycapiata/plus/raw/refs/heads/main/FemonPlay-16.6-Produccion-Firmado.apk",
+  "obligatorio": "no",
+  "whatsapp": "22 9105 8930"
+}
