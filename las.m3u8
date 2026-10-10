@@ -1,4 +1,4 @@
 #EXTM3U
 #EXT-X-INDEPENDENT-SEGMENTS
-#EXT-X-STREAM-INF:BANDWIDTH=4540000,
-https://streaming.onnethn.com/UNIMAS/tracks-v1a1/mono.ts.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=3084000,
+http://45.186.106.207:8000/play/a03g/index.m3u8
