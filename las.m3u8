@@ -1,3 +1,3 @@
 #EXTM3U
-#EXTINF:0.0,Canal
+#EXT-X-STREAM-INF:BANDWIDTH=5000000
 https://channel01-onlymex.akamaized.net/hls/live/2022749/event01/index.m3u8
