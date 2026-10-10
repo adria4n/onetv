@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Onetv</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      color: white;
+      font-family: sans-serif;
+      overflow: hidden;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+    }
+    #player {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      background: black;
+      touch-action: none;
+      position: relative;
+      z-index: 1;
+      display: block;
+    }
+    #player.hidden {
+      visibility: hidden;
+    }
+    #channelChangeOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 5;
+      background-color: black;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    #channelChangeOverlay.visible {
+      display: flex;
+    }
+    #canalInfo, #menu, #replayMenu {
+      position: absolute;
+      z-index: 10;
+    }
+    #canalInfo {
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 30vh;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.99), rgba(0,0,0,0));
+      padding: 10px 10px 15px 3px;
+      display: none;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: flex-start;
+      font-size: 20px;
+      text-align: left;
+      touch-action: none;
+      box-sizing: border-box;
+    }
+    #canalInfo .canalLogo {
+      width: 80px;
+      height: 80px;
+      margin-right: 5px;
+      margin-left: 5px;
+      object-fit: contain;
+    }
+    #canalInfo .infoContainer {
+      display: flex;
+      flex-direction: column;
+      margin-left: 0;
+    }
+    #canalInfo .canalName {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    #canalInfo .epgInfo {
+      font-size: 16px;
+      color: #fff;
+      font-weight: bold;
+    }
+    #canalInfo .epgInfo span {
+      display: block;
+      margin-bottom: 4px;
+    }
+    #canalInfo .rightPanel {
+      margin-left: auto;
+      margin-right: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    #canalInfo .dateTime {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      padding-top: 10px;
+      text-align: center;
+      line-height: 1.2;
+    }
+    #canalInfo .replayIndicator {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 4px;
+      color: #fff;
+      text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    #menu, #replayMenu {
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow-y: auto;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      transition: none;
+      outline: none;
+      touch-action: pan-y;
+    }
+    #menu {
+      padding: 0 0 10px 0;
+    }
+    #replayMenu {
+      padding: 0 0 10px 10px;
+    }
+    .channel-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 12px 12px 8px;
+      margin-bottom: 5px;
+      background: #0b0b0b;
+      cursor: pointer;
+      outline: none;
+    }
+    .replay-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 12px 12px 8px;
+      margin-bottom: 5px;
+      background: #0b0b0b;
+      cursor: pointer;
+      outline: none;
+      border-radius: 0;
+      transition: background 0.2s;
+    }
+    .replay-row .image-container {
+      flex-shrink: 0;
+      margin-right: 15px;
+      width: 110px;
+      height: 62px;
+    }
+    .replay-row img {
+      width: 110px;
+      height: 62px;
+      object-fit: cover;
+      border-radius: 0;
+      background: #222;
+    }
+    .replay-row .text-container {
+      flex: 1;
+    }
+    .replay-row .time {
+      font-size: 13px;
+      color: #ccc;
+      margin-bottom: 5px;
+    }
+    .replay-row .title {
+      font-size: 17px;
+      font-weight: bold;
+      line-height: 1.3;
+    }
+    .logo {
+      width: 50px;
+      height: 50px;
+      margin-right: 10px;
+      margin-left: 5px;
+      object-fit: contain;
+    }
+    .number {
+      width: 60px;
+      text-align: center;
+      font-size: 18px;
+      color: #b5b5b5;
+      font-weight: bold;
+      margin-left: -17px;
+    }
+    .channel-info {
+      flex: 1;
+      margin-left: -5px;
+    }
+    .channel-info .title {
+      font-size: 17px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .channel-info .time {
+      font-size: 13px;
+      color: #ccc;
+    }
+    .progress {
+      width: 100%;
+      height: 5px;
+      background: #444;
+      margin-top: 6px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #fff;
+    }
+    .channel-row.active, .replay-row.active {
+      background: #1a1a1a;
+    }
+    #menu::-webkit-scrollbar, #replayMenu::-webkit-scrollbar {
+      display: none;
+    }
+    * {
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    ::selection {
+      background: transparent;
+    }
+    ::-moz-selection {
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+  <video id="player" autoplay class="hidden"></video>
+  <div id="channelChangeOverlay" aria-hidden="true"></div>
+  <div id="canalInfo"></div>
+  <div id="menu"></div>
+  <div id="replayMenu"></div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/4.16.52/shaka-player.compiled.js"></script>
+  <script>
+    const CHANNEL_LIST_URL = "https://dl.dropbox.com/scl/fi/0hwhugrfmv6aqh0wel7k1/lista.onetv.izzi.txt?rlkey=0bj8hpvrsrtfwn58ez1c21a3y";
+    const REPLAY_LIST_URL = "https://dl.dropbox.com/scl/fi/5b4bsk2it65l4fgo6aq6x/listareplay.txt?rlkey=0nen2goumf1ez1kap732s17cj";
+    const AKAMAI_TIME_URL = "https://time.akamai.com/?iso";
+    const EPG_SCHEDULE_BASE = "https://www.izzigo.tv/managetv/tvinfo/events/schedule";
+    const LIVE_BASE_URL = "https://live1-ott.izzigo.tv";
+    const IMAGEN_REPLAY = "https://be-cdn.izzigo.tv";
+    const DEVICEID = "4c1fd3ca-32bd-4cd4-89e8-579a5ee73cac";
+    const REGION = "METRO";
+
+    let canales = [];
+    let replayByServiceId = {};
+    let serverTimeOffsetMs = 0;
+    let epgCache = {};
+    let replayCache = {};
+    let replayVisible = false;
+    let replaySeleccion = 0;
+    let replayEvents = [];
+    let currentReplayEvent = null;
+    let lastSelectedReplayTimestamps = {};
+    let replayMenuChannelIndex = -1;
+    let replayMenuUserScrolled = false;
+    let replayListSignature = "";
+    let epgBarUpdateTimers = {};
+    let channelLoadInFlight = {};
+    let retryPendingDebounceTimer = null;
+
+    const videoElement = document.getElementById("player");
+    const player = new shaka.Player(videoElement);
+    const canalInfo = document.getElementById("canalInfo");
+    const menu = document.getElementById("menu");
+    const replayMenu = document.getElementById("replayMenu");
+    const channelChangeOverlay = document.getElementById("channelChangeOverlay");
+
+    replayMenu.addEventListener("scroll", function () {
+      if (replayVisible) replayMenuUserScrolled = true;
+    }, { passive: true });
+
+    let canalActual = -1;
+    let lastKnownCanal = -1;
+    let menuVisible = false;
+    let menuSeleccion = -1;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchMoved = false;
+
+    const timeMx = new Intl.DateTimeFormat("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "America/Mexico_City"
+    });
+
+    const dateMxLong = new Intl.DateTimeFormat("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+      timeZone: "America/Mexico_City"
+    });
+
+    function actualizarBarra(inicioPrograma, finPrograma, barra) {
+      const ahora = nowMs() / 1000;
+      if (ahora < inicioPrograma) {
+        barra.style.width = "0%";
+        return;
+      }
+      if (ahora >= finPrograma) {
+        barra.style.width = "100%";
+        return;
+      }
+      const duracion = finPrograma - inicioPrograma;
+      const transcurrido = ahora - inicioPrograma;
+      const porcentaje = (transcurrido / duracion) * 100;
+      barra.style.width = porcentaje + "%";
+    }
+
+    function actualizarBarrasMenu() {
+      if (!menu.hasChildNodes()) return;
+      const currentTime = Math.floor(nowMs() / 1000);
+      canales.forEach(function (_, i) {
+        const item = menu.querySelector('[data-index="' + i + '"]');
+        if (!item) return;
+        const progressBar = item.querySelector(".progress-bar");
+        if (!progressBar) return;
+        if (!hasUsableEpg(i)) {
+          progressBar.style.width = "0%";
+          return;
+        }
+        const pair = findCurrentAndNext(epgCache[i], currentTime);
+        if (pair.current) {
+          actualizarBarra(pair.current.start_timestamp, pair.current.stop_timestamp, progressBar);
+        } else {
+          progressBar.style.width = "0%";
+        }
+      });
+    }
+
+    async function cargarListaNormal() {
+      const respuesta = await fetch(CHANNEL_LIST_URL, { cache: "no-store" });
+      if (!respuesta.ok) return [];
+      const texto = await respuesta.text();
+      try {
+        const lista = eval(texto);
+        if (!Array.isArray(lista)) return [];
+        return lista
+          .map(function (canal) {
+            return {
+              nombre: canal.nombre,
+              logo: canal.logo,
+              ch: canal.ch,
+              url: canal.url,
+              serviceId: canal.serviceId,
+              license_key: canal.license_key
+            };
+          })
+          .filter(function (c) { return c.url; });
+      } catch (e) {
+        return [];
+      }
+    }
+
+    async function cargarListaReplay() {
+      const respuesta = await fetch(REPLAY_LIST_URL, { cache: "no-store" });
+      if (!respuesta.ok) return [];
+      const texto = await respuesta.text();
+      try {
+        const lista = eval(texto);
+        if (!Array.isArray(lista)) return [];
+        return lista
+          .map(function (canal) {
+            return {
+              url: canal.url,
+              serviceId: canal.serviceId,
+              license_key: canal.license_key
+            };
+          })
+          .filter(function (r) { return r.serviceId && r.url; });
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function buildReplayIndex(list) {
+      const map = {};
+      list.forEach(function (r) {
+        map[r.serviceId] = r;
+      });
+      return map;
+    }
+
+    async function loadCanales() {
+      canales = await cargarListaNormal();
+      return canales;
+    }
+
+    async function loadReplayList() {
+      replayByServiceId = buildReplayIndex(await cargarListaReplay());
+      return replayByServiceId;
+    }
+
+    function canalLabel(canal) {
+      if (!canal) return "";
+      if (canal.ch != null && canal.ch !== "") return canal.ch + " - " + canal.nombre;
+      return canal.nombre || "";
+    }
+
+    function canalNumberText(canal) {
+      if (!canal || canal.ch == null || canal.ch === "") return "";
+      return canal.ch;
+    }
+
+    function getReplayEntryForChannelIndex(index) {
+      const canal = canales[index];
+      if (!canal || !canal.serviceId) return null;
+      return replayByServiceId[canal.serviceId] || null;
+    }
+
+    function canalTieneReplay(index) {
+      return !!getReplayEntryForChannelIndex(index);
+    }
+
+    function nowMs() {
+      return Date.now() + serverTimeOffsetMs;
+    }
+
+    function getSyncedNow() {
+      return new Date(nowMs());
+    }
+
+    function toEpgIsoUtc(date) {
+      return date.toISOString().split(".")[0] + "Z";
+    }
+
+    function buildEpgScheduleUrl(serviceId, startDate, endDate) {
+      const params = new URLSearchParams();
+      params.set("controlvn", String(nowMs()));
+      params.set("end", toEpgIsoUtc(endDate));
+      params.set("serviceId", String(serviceId));
+      params.set("start", toEpgIsoUtc(startDate));
+      params.set("view", "cd-events-grid-view");
+      return EPG_SCHEDULE_BASE + "?" + params.toString();
+    }
+
+    function getEPGUrl(serviceId) {
+      const now = getSyncedNow();
+      const startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+      const endDate = new Date(now.getTime());
+      endDate.setUTCDate(endDate.getUTCDate() + 1);
+      endDate.setUTCHours(12, 0, 0, 0);
+      return buildEpgScheduleUrl(serviceId, startDate, endDate);
+    }
+
+    function getReplayWindowStartDate(days) {
+      days = days || 7;
+      const now = getSyncedNow();
+      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      startDate.setUTCDate(startDate.getUTCDate() - 1);
+      startDate.setUTCHours(12, 0, 0, 0);
+      return startDate;
+    }
+
+    function getReplayEPGUrl(serviceId, days) {
+      days = days || 7;
+      const now = getSyncedNow();
+      const startDate = getReplayWindowStartDate(days);
+      const endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      endDate.setUTCHours(12, 0, 0, 0);
+      return buildEpgScheduleUrl(serviceId, startDate, endDate);
+    }
+
+    async function fetchAkamaiTime() {
+      try {
+        const response = await fetch(AKAMAI_TIME_URL, { cache: "no-store" });
+        if (!response.ok) return false;
+        const iso = (await response.text()).trim();
+        const serverMs = Date.parse(iso);
+        if (Number.isNaN(serverMs)) return false;
+        serverTimeOffsetMs = serverMs - Date.now();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function formatDateTime() {
+      return timeMx.format(getSyncedNow());
+    }
+
+    function formatStartTime(startTimestamp) {
+      return timeMx.format(new Date(startTimestamp * 1000));
+    }
+
+    function paintDateTime() {
+      const el = canalInfo.querySelector(".dateTime");
+      if (el) el.textContent = formatDateTime();
+    }
+
+    async function refreshClockFromAkamai() {
+      await fetchAkamaiTime();
+      paintDateTime();
+      rescheduleAllChannelsEpgFromCache();
+    }
+
+    function showChannelChangeOverlay() {
+      videoElement.classList.add("hidden");
+      channelChangeOverlay.classList.add("visible");
+      channelChangeOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function hideChannelChangeOverlay() {
+      channelChangeOverlay.classList.remove("visible");
+      channelChangeOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    function revealVideoPlayer() {
+      hideChannelChangeOverlay();
+      videoElement.classList.remove("hidden");
+    }
+
+    function epgImageUrlSna(spaLoc) {
+      if (!spaLoc || !spaLoc.img_lnk || !spaLoc.img_lnk.sna) return null;
+      const sna = spaLoc.img_lnk.sna;
+      const sizeL = sna.sizes && sna.sizes.l;
+      if (!sna.url || !sizeL) return null;
+      return IMAGEN_REPLAY + sna.url.replace("{image-size}", sizeL);
+    }
+
+    function seasonEpisodeSuffix(e) {
+      if (!e) return "";
+      const parts = [];
+      if (e.season) parts.push("T" + e.season);
+      if (e.episode) parts.push("E" + e.episode);
+      if (!parts.length) return "";
+      return " / " + parts.join(" ");
+    }
+
+    function mapEpgEvent(event, forReplay) {
+      const startTime = Date.parse(event.sta || "");
+      const endTime = Date.parse(event.end || "");
+      let title = "";
+      const season = event.con.sea || "";
+      const episode = event.con.scn || "";
+      let image = null;
+      let cti = "";
+      if (event.con.loc && Array.isArray(event.con.loc)) {
+        const spaLoc = event.con.loc.find(function (item) { return item.lan === "SPA"; });
+        title = spaLoc ? spaLoc.tit : (event.con.oti || event.con.tit || "");
+        if (spaLoc && spaLoc.cti) cti = String(spaLoc.cti).trim();
+        if (forReplay) image = epgImageUrlSna(spaLoc);
+      } else {
+        title = event.con.oti || event.con.tit || "";
+      }
+      title = (title + seasonEpisodeSuffix({ season: season, episode: episode }) + (cti ? " " + cti : "")).trim();
+      const row = {
+        start_timestamp: Math.floor(startTime / 1000),
+        stop_timestamp: Math.floor(endTime / 1000),
+        title: title,
+        season: season,
+        episode: episode,
+        image: image
+      };
+      if (forReplay) row.cid = event.con.cid || "";
+      return row;
+    }
+
+    async function fetchEpgSchedule(serviceId, scheduleUrl, forReplay, noStore) {
+      if (!serviceId) return [];
+      const response = await fetch(scheduleUrl, noStore ? { cache: "no-store" } : undefined);
+      if (!response.ok) {
+        throw new Error("epg_http_" + response.status);
+      }
+      const data = await response.json();
+      return (data.evs || [])
+        .filter(function (event) { return event.con; })
+        .map(function (event) { return mapEpgEvent(event, forReplay); })
+        .filter(function (event) { return event.start_timestamp > 0 && event.stop_timestamp > 0; })
+        .sort(function (a, b) { return a.start_timestamp - b.start_timestamp; });
+    }
+
+    function fetchEPG(serviceId) {
+      return fetchEpgSchedule(serviceId, getEPGUrl(serviceId), false, false);
+    }
+
+    function fetchReplayEPG(serviceId) {
+      return fetchEpgSchedule(serviceId, getReplayEPGUrl(serviceId, 7), true, true);
+    }
+
+    function fetchEpgForChannel(canal) {
+      return fetchEPG(canal.serviceId);
+    }
+
+    function findCurrentAndNext(epg_listings, currentTime) {
+      let current = null;
+      let next = null;
+      for (let e of epg_listings || []) {
+        if (e.start_timestamp <= currentTime && currentTime < e.stop_timestamp) current = e;
+        else if (e.start_timestamp > currentTime && !next) next = e;
+      }
+      return { current: current, next: next };
+    }
+
+    function getNextEpgTransitionUnix(epg_listings) {
+      if (!epg_listings || !epg_listings.length) return null;
+      const currentTime = Math.floor(nowMs() / 1000);
+      const pair = findCurrentAndNext(epg_listings, currentTime);
+      if (pair.current) return pair.current.stop_timestamp;
+      if (pair.next) return pair.next.start_timestamp;
+      for (let i = 0; i < epg_listings.length; i++) {
+        const e = epg_listings[i];
+        if (e.start_timestamp > currentTime) return e.start_timestamp;
+      }
+      return null;
+    }
+
+    function clearEpgBarUpdateScheduleForChannel(index) {
+      const key = String(index);
+      if (epgBarUpdateTimers[key] != null) {
+        clearTimeout(epgBarUpdateTimers[key]);
+        delete epgBarUpdateTimers[key];
+      }
+    }
+
+    function clearAllEpgBarUpdateSchedules() {
+      Object.keys(epgBarUpdateTimers).forEach(function (key) {
+        clearTimeout(epgBarUpdateTimers[key]);
+      });
+      epgBarUpdateTimers = {};
+    }
+
+    function getCurrentProgramInfo(epg_listings, canalNombre) {
+      const currentTime = Math.floor(nowMs() / 1000);
+      const pair = findCurrentAndNext(epg_listings || [], currentTime);
+      let title = canalNombre;
+      let timeStr = "Info. no disponible";
+      if (pair.current) {
+        title = pair.current.title;
+        timeStr = formatStartTime(pair.current.start_timestamp) + " - " + formatStartTime(pair.current.stop_timestamp);
+      } else if (pair.next) {
+        title = pair.next.title;
+        timeStr = "Próximo: " + formatStartTime(pair.next.start_timestamp);
+      }
+      return { title: title, timeStr: timeStr };
+    }
+
+    function paintChannelRowProgress(index, epg_listings) {
+      const item = menu.querySelector('[data-index="' + index + '"]');
+      if (!item) return;
+      const progressBar = item.querySelector(".progress-bar");
+      if (!progressBar) return;
+      const currentTime = Math.floor(nowMs() / 1000);
+      const pair = findCurrentAndNext(epg_listings || [], currentTime);
+      if (pair.current) {
+        actualizarBarra(pair.current.start_timestamp, pair.current.stop_timestamp, progressBar);
+      } else {
+        progressBar.style.width = "0%";
+      }
+    }
+
+    function paintChannelRowNoEpg(index) {
+      const canal = canales[index];
+      if (!canal) return;
+      const item = menu.querySelector('[data-index="' + index + '"]');
+      if (!item) return;
+      const titleDiv = item.querySelector(".title");
+      const timeDiv = item.querySelector(".time");
+      const progressBar = item.querySelector(".progress-bar");
+      if (titleDiv) titleDiv.textContent = canal.nombre;
+      if (timeDiv) timeDiv.textContent = "Info. no disponible";
+      if (progressBar) progressBar.style.width = "0%";
+    }
+
+    function paintChannelRowLoading(index) {
+      const canal = canales[index];
+      if (!canal) return;
+      const item = menu.querySelector('[data-index="' + index + '"]');
+      if (!item) return;
+      const titleDiv = item.querySelector(".title");
+      const timeDiv = item.querySelector(".time");
+      if (titleDiv) titleDiv.textContent = canal.nombre;
+      if (timeDiv) timeDiv.textContent = "Info. no disponible";
+    }
+
+    function paintChannelRow(index, epg_listings) {
+      const info = getCurrentProgramInfo(epg_listings || [], canales[index].nombre);
+      const item = menu.querySelector('[data-index="' + index + '"]');
+      if (!item) return;
+      const titleDiv = item.querySelector(".title");
+      const timeDiv = item.querySelector(".time");
+      if (titleDiv) titleDiv.textContent = info.title;
+      if (timeDiv) timeDiv.textContent = info.timeStr;
+      paintChannelRowProgress(index, epg_listings);
+    }
+
+    function updateEPGText(epg_listings) {
+      const currentTime = Math.floor(nowMs() / 1000);
+      const pair = findCurrentAndNext(epg_listings || [], currentTime);
+      let ahoraText = "Info. no disponible";
+      if (pair.current) {
+        ahoraText = formatStartTime(pair.current.start_timestamp) + " - " + pair.current.title;
+      }
+      let siguienteText = "Info. no disponible";
+      if (pair.next) {
+        siguienteText = formatStartTime(pair.next.start_timestamp) + " - " + pair.next.title;
+      }
+      const epgDiv = canalInfo.querySelector(".epgInfo");
+      if (epgDiv) {
+        epgDiv.innerHTML = "<span><strong>Ahora:</strong> " + ahoraText + "</span><span><strong>Siguiente:</strong> " + siguienteText + "</span>";
+      }
+    }
+
+    function updateEPGTextLoading() {
+      const epgDiv = canalInfo.querySelector(".epgInfo");
+      if (epgDiv) {
+        epgDiv.innerHTML = "<span><strong>Ahora:</strong> Info. no disponible</span><span><strong>Siguiente:</strong> Info. no disponible</span>";
+      }
+    }
+
+    function finishChannelEpgEmpty(index) {
+      epgCache[index] = [];
+      paintChannelRowNoEpg(index);
+      if (index === canalActual) updateEPGText([]);
+      clearEpgBarUpdateScheduleForChannel(index);
+    }
+
+    function canalHasEpgSource(canal) {
+      return !!(canal && canal.serviceId);
+    }
+
+    function channelHasEpgSource(index) {
+      return canalHasEpgSource(canales[index]);
+    }
+
+    function channelHasServiceId(index) {
+      const canal = canales[index];
+      return !!(canal && canal.serviceId);
+    }
+
+    function epgNeverLoaded(index) {
+      return epgCache[index] === undefined;
+    }
+
+    function replayNeverLoaded(index) {
+      return replayCache[index] === undefined;
+    }
+
+    function hasUsableEpg(index) {
+      if (!channelHasEpgSource(index)) return false;
+      const epg = epgCache[index];
+      return Array.isArray(epg) && epg.length > 0;
+    }
+
+    function channelNeedsEpg(index) {
+      if (!channelHasEpgSource(index)) return false;
+      const epg = epgCache[index];
+      return epg === undefined || (Array.isArray(epg) && epg.length === 0);
+    }
+
+    function channelNeedsReplay(index) {
+      if (!canalTieneReplay(index)) return false;
+      return replayNeverLoaded(index);
+    }
+
+    function channelNeedsDataLoad(index) {
+      return channelNeedsEpg(index) || channelNeedsReplay(index);
+    }
+
+    function syncChannelRowFromCache(index) {
+      if (index < 0 || !canales[index]) return;
+      if (!channelHasEpgSource(index)) {
+        finishChannelEpgEmpty(index);
+        return;
+      }
+      if (epgNeverLoaded(index)) {
+        paintChannelRowLoading(index);
+        if (index === canalActual) updateEPGTextLoading();
+        return;
+      }
+      if (!hasUsableEpg(index)) {
+        paintChannelRowNoEpg(index);
+        if (index === canalActual) updateEPGText([]);
+        return;
+      }
+      paintChannelRow(index, epgCache[index]);
+      if (index === canalActual) updateEPGText(epgCache[index]);
+    }
+
+    function applyEpgDisplayForChannel(index) {
+      if (index < 0 || !canales[index]) return;
+      syncChannelRowFromCache(index);
+      if (hasUsableEpg(index)) scheduleEpgBarUpdateForChannel(index);
+    }
+
+    function onChannelEpgBoundary(index) {
+      applyEpgDisplayForChannel(index);
+    }
+
+    function scheduleEpgBarUpdateForChannel(index) {
+      clearEpgBarUpdateScheduleForChannel(index);
+      if (!hasUsableEpg(index)) return;
+      const epg = epgCache[index];
+      const nextUnix = getNextEpgTransitionUnix(epg);
+      if (nextUnix == null) return;
+      let delayMs = nextUnix * 1000 - nowMs();
+      if (delayMs < 0) delayMs = 0;
+      if (delayMs > 2147483647) delayMs = 2147483647;
+      const key = String(index);
+      epgBarUpdateTimers[key] = setTimeout(function () {
+        delete epgBarUpdateTimers[key];
+        onChannelEpgBoundary(index);
+      }, delayMs);
+    }
+
+    function scheduleAllChannelsEpgBarUpdates() {
+      canales.forEach(function (_, i) {
+        scheduleEpgBarUpdateForChannel(i);
+      });
+    }
+
+    function repaintAllMenuRowsFromEpgCache() {
+      canales.forEach(function (_, i) {
+        syncChannelRowFromCache(i);
+      });
+      actualizarBarrasMenu();
+    }
+
+    function rescheduleAllChannelsEpgFromCache() {
+      repaintAllMenuRowsFromEpgCache();
+      scheduleAllChannelsEpgBarUpdates();
+    }
+
+    function refreshCanalActualEpg() {
+      if (canalActual < 0) return;
+      applyEpgDisplayForChannel(canalActual);
+    }
+
+    function scheduleHideCanalInfo() {
+      clearTimeout(canalInfo.timeout);
+      canalInfo.timeout = setTimeout(function () {
+        if (!menuVisible) canalInfo.style.display = "none";
+      }, 5000);
+    }
+
+    function showCanalInfoBar() {
+      canalInfo.style.display = "flex";
+      scheduleHideCanalInfo();
+    }
+
+    function updateEPG(epg_listings) {
+      refreshCanalActualEpg();
+      showCanalInfoBar();
+    }
+
+    function updateChannelRow(index, epg) {
+      if (!Array.isArray(epg) || !epg.length) {
+        finishChannelEpgEmpty(index);
+        return;
+      }
+      epgCache[index] = epg;
+      paintChannelRow(index, epg);
+      if (index === canalActual) updateEPGText(epg);
+      scheduleEpgBarUpdateForChannel(index);
+    }
+
+    function isOnline() {
+      return typeof navigator === "undefined" || navigator.onLine !== false;
+    }
+
+    function channelLogoNeedsRetry(img) {
+      if (!img) return false;
+      if (img.dataset.logoFailed === "1") return true;
+      if (img.style.display === "none") return true;
+      if (!img.complete) return true;
+      if (img.naturalWidth === 0) return true;
+      return false;
+    }
+
+    function setupChannelLogoImage(img, logoUrl) {
+      if (!img) return;
+      img.onerror = function () {
+        img.style.display = "none";
+        img.dataset.logoFailed = "1";
+      };
+      img.onload = function () {
+        img.style.display = "";
+        img.dataset.logoFailed = "0";
+      };
+      if (logoUrl) {
+        img.src = logoUrl;
+      }
+    }
+
+    function reloadChannelLogoImage(img, logoUrl) {
+      if (!img || !logoUrl) return;
+      setupChannelLogoImage(img, null);
+      img.style.display = "";
+      const prev = img.getAttribute("src");
+      if (prev === logoUrl) {
+        img.removeAttribute("src");
+        img.src = logoUrl;
+      } else {
+        img.src = logoUrl;
+      }
+    }
+
+    function refreshMenuLogos() {
+      if (!isOnline()) return;
+      if (!menu.hasChildNodes()) return;
+      canales.forEach(function (canal, i) {
+        if (!canal || !canal.logo) return;
+        const item = menu.querySelector('[data-index="' + i + '"]');
+        if (!item) return;
+        const logoImg = item.querySelector("img.logo");
+        if (!logoImg) return;
+        if (!channelLogoNeedsRetry(logoImg)) return;
+        reloadChannelLogoImage(logoImg, canal.logo);
+      });
+    }
+
+    function refreshCanalInfoLogo() {
+      if (!isOnline() || canalActual < 0) return;
+      const canal = canales[canalActual];
+      if (!canal || !canal.logo) return;
+      const logoImg = canalInfo.querySelector("img.canalLogo");
+      if (!logoImg) return;
+      if (!channelLogoNeedsRetry(logoImg)) return;
+      reloadChannelLogoImage(logoImg, canal.logo);
+    }
+
+    function refreshAllChannelLogos() {
+      refreshMenuLogos();
+      refreshCanalInfoLogo();
+    }
+
+    function retryPendingChannelLoads() {
+      if (!isOnline()) return;
+      if (!canales.length) return;
+      canales.forEach(function (_, i) {
+        if (!channelHasEpgSource(i)) {
+          finishChannelEpgEmpty(i);
+          return;
+        }
+        if (channelNeedsEpg(i)) {
+          loadChannelData(i);
+          return;
+        }
+        if (channelNeedsReplay(i)) {
+          loadChannelData(i);
+        }
+      });
+      refreshAllChannelLogos();
+    }
+
+    function scheduleRetryPendingChannelLoads() {
+      clearTimeout(retryPendingDebounceTimer);
+      retryPendingDebounceTimer = setTimeout(function () {
+        retryPendingDebounceTimer = null;
+        retryPendingChannelLoads();
+      }, 1000);
+    }
+
+    function setupNetworkRecoveryListeners() {
+      window.addEventListener("online", function () {
+        fetchAkamaiTime().then(function () {
+          rescheduleAllChannelsEpgFromCache();
+        });
+        scheduleRetryPendingChannelLoads();
+        refreshAllChannelLogos();
+      });
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible" && isOnline()) {
+          rescheduleAllChannelsEpgFromCache();
+          scheduleRetryPendingChannelLoads();
+          refreshAllChannelLogos();
+        }
+      });
+    }
+
+    async function loadChannelData(index) {
+      const canal = canales[index];
+      if (!canal) return;
+      if (channelLoadInFlight[index]) {
+        return channelLoadInFlight[index];
+      }
+
+      const promise = (async () => {
+        const jobs = [];
+
+        if (epgCache[index] === undefined || (Array.isArray(epgCache[index]) && epgCache[index].length === 0)) {
+          jobs.push(
+            fetchEpgForChannel(canal)
+              .then(data => {
+                epgCache[index] = data || [];
+                paintChannelRow(index, epgCache[index]);
+                if (index === canalActual) {
+                  updateEPGText(epgCache[index]);
+                }
+                scheduleEpgBarUpdateForChannel(index);
+              })
+              .catch(() => {
+                if (!isOnline()) {
+                  paintChannelRowLoading(index);
+                  if (index === canalActual) updateEPGTextLoading();
+                } else {
+                  epgCache[index] = [];
+                  paintChannelRowNoEpg(index);
+                }
+              })
+          );
+        }
+
+        if (canalTieneReplay(index) && replayCache[index] === undefined) {
+          jobs.push(
+            fetchReplayEPG(canal.serviceId)
+              .then(data => {
+                replayCache[index] = data || [];
+                if (replayVisible && replayMenuChannelIndex === index) {
+                  renderReplayMenu(replayCache[index], index, { preserveScroll:true });
+                }
+              })
+              .catch(() => {
+                if (!isOnline()) {
+                } else {
+                  replayCache[index] = [];
+                }
+              })
+          );
+        }
+
+        await Promise.all(jobs);
+      })();
+
+      channelLoadInFlight[index] = promise;
+
+      try {
+        await promise;
+      } finally {
+        delete channelLoadInFlight[index];
+      }
+
+      return promise;
+    }
+
+    function loadAllChannelsDataOnce() {
+      canales.forEach((_, index) => {
+        loadChannelData(index);
+      });
+    }
+
+    function bindTapSelect(el, onTap) {
+      el.addEventListener("touchstart", function (e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchMoved = false;
+      });
+      el.addEventListener("touchmove", function () { touchMoved = true; });
+      el.addEventListener("touchend", function (e) {
+        e.stopPropagation();
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        if (!touchMoved && Math.abs(deltaX) < 50 && Math.abs(deltaY) < 50) {
+          onTap();
+        }
+      });
+    }
+
+    function scrollRowToCenter(container, rowSelector, index) {
+      const items = container.querySelectorAll(rowSelector);
+      if (index < 0 || !items.length) return;
+      const idx = Math.max(0, Math.min(index, items.length - 1));
+      const seleccionado = items[idx];
+      if (!seleccionado) return;
+      const menuRect = container.getBoundingClientRect();
+      const itemRect = seleccionado.getBoundingClientRect();
+      container.scrollTop = seleccionado.offsetTop - menuRect.height / 2 + itemRect.height / 2;
+    }
+
+    function formatReplayParam(timestamp) {
+      const d = new Date(timestamp * 1000);
+      d.setUTCSeconds(0, 0);
+      return d.toISOString().slice(0, 19).replace(/[-:]/g, "") + "Z";
+    }
+
+    function resolveReplayRegion(replayEntry, canalIndex) {
+      const fromReplay = replayEntry && replayEntry.region ? String(replayEntry.region).trim() : "";
+      const fromGlobal = REGION != null ? String(REGION).trim() : "";
+      return fromReplay || fromGlobal || "METRO";
+    }
+
+    function resolveReplayDeviceId() {
+      return DEVICEID != null ? String(DEVICEID).trim() : "";
+    }
+
+    function buildReplayManifestUrl(replayEntry, startTimestamp, stopTimestamp, canalIndex) {
+      const raw = String(replayEntry.url || "");
+      let baseUrl = raw;
+      const params = new URLSearchParams();
+      const q = raw.indexOf("?");
+      if (q >= 0) {
+        baseUrl = raw.slice(0, q);
+        const existing = new URLSearchParams(raw.slice(q + 1));
+        existing.forEach(function (value, key) {
+          if (key !== "start" && key !== "end" && key !== "region" && key !== "deviceid") {
+            params.set(key, value);
+          }
+        });
+      }
+      const endWithExtra = stopTimestamp + 6 * 60;
+      params.set("start", formatReplayParam(startTimestamp));
+      params.set("end", formatReplayParam(endWithExtra));
+      params.set("deviceid", resolveReplayDeviceId());
+      params.set("region", resolveReplayRegion(replayEntry, canalIndex));
+      return baseUrl + "?" + params.toString();
+    }
+
+    function renderMenuInicial() {
+      menu.innerHTML = "";
+      canales.forEach(function (canal, i) {
+        const div = document.createElement("div");
+        div.className = "channel-row";
+        div.dataset.index = String(i);
+        const logoImg = document.createElement("img");
+        logoImg.className = "logo";
+        logoImg.alt = (canal.nombre || "") + " logo";
+        setupChannelLogoImage(logoImg, canal.logo);
+        const numberDiv = document.createElement("div");
+        numberDiv.className = "number";
+        numberDiv.textContent = canalNumberText(canal);
+        const channelInfo = document.createElement("div");
+        channelInfo.className = "channel-info";
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "title";
+        titleDiv.textContent = canal.nombre;
+        const timeDiv = document.createElement("div");
+        timeDiv.className = "time";
+        timeDiv.textContent = canalHasEpgSource(canal) ? "Info. no disponible" : "Info. no disponible";
+        const progressDiv = document.createElement("div");
+        progressDiv.className = "progress";
+        const progressBar = document.createElement("div");
+        progressBar.className = "progress-bar";
+        progressBar.style.width = "0%";
+        progressDiv.appendChild(progressBar);
+        channelInfo.appendChild(titleDiv);
+        channelInfo.appendChild(timeDiv);
+        channelInfo.appendChild(progressDiv);
+        div.appendChild(logoImg);
+        div.appendChild(numberDiv);
+        div.appendChild(channelInfo);
+        bindTapSelect(div, function () {
+          menuSeleccion = i;
+          actualizarSeleccionMenu();
+          seleccionarCanal();
+        });
+        menu.appendChild(div);
+      });
+      actualizarSeleccionMenu();
+      loadAllChannelsDataOnce();
+    }
+
+    function getReplaySeleccionInicial(channelIndex, replayEventsLocal) {
+      const saved = lastSelectedReplayTimestamps[channelIndex];
+      if (saved == null || saved === undefined) return 0;
+      const idx = replayEventsLocal.findIndex(function (e) {
+        return e.start_timestamp === saved;
+      });
+      return idx === -1 ? 0 : idx;
+    }
+
+    function buildReplayEventsList(epgList) {
+      const now_ts = Math.floor(nowMs() / 1000);
+      const replayStartTs = Math.floor(getReplayWindowStartDate(7).getTime() / 1000);
+      return (epgList || [])
+        .filter(function (e) {
+          return e.start_timestamp >= replayStartTs && e.start_timestamp <= now_ts;
+        })
+        .sort(function (a, b) { return b.start_timestamp - a.start_timestamp; });
+    }
+
+    function replayEventsSignature(events) {
+      if (!events || !events.length) return "empty";
+      return events.length + "|" + events[0].start_timestamp + "|" + events[events.length - 1].start_timestamp;
+    }
+
+    function renderReplayMenu(epgList, channelIndex, opts) {
+      opts = opts || {};
+      const resetScroll = opts.resetScroll === true;
+      const preserveScroll = opts.preserveScroll === true || (!resetScroll && replayMenuUserScrolled);
+      const prevScrollTop = replayMenu.scrollTop;
+
+      const replayEventsLocal = buildReplayEventsList(epgList);
+      const newSig = replayEventsSignature(replayEventsLocal);
+
+      if (
+        preserveScroll &&
+        replayVisible &&
+        replayMenuChannelIndex === channelIndex &&
+        newSig === replayListSignature &&
+        replayMenu.querySelector(".replay-row")
+      ) {
+        replayEvents = replayEventsLocal;
+        return;
+      }
+
+      replayListSignature = newSig;
+      replayMenu.innerHTML = "";
+      replayEvents = replayEventsLocal;
+
+      const replaySeleccionInit = getReplaySeleccionInicial(channelIndex, replayEventsLocal);
+      replayEventsLocal.forEach(function (event, i) {
+        const div = document.createElement("div");
+        div.className = "replay-row";
+        div.dataset.index = String(i);
+        const imgContainer = document.createElement("div");
+        imgContainer.className = "image-container";
+        if (event.image) {
+          const img = document.createElement("img");
+          img.src = event.image;
+          img.alt = event.title || "Programa";
+          img.onerror = function () { img.style.display = "none"; };
+          imgContainer.appendChild(img);
+        }
+        div.appendChild(imgContainer);
+        const textContainer = document.createElement("div");
+        textContainer.className = "text-container";
+        const timeDiv = document.createElement("div");
+        timeDiv.className = "time";
+        let dateStr = dateMxLong.format(new Date(event.start_timestamp * 1000));
+        dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+        timeDiv.textContent = dateStr + " " + formatStartTime(event.start_timestamp) + " - " + formatStartTime(event.stop_timestamp);
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "title";
+        titleDiv.textContent = event.title;
+        textContainer.appendChild(timeDiv);
+        textContainer.appendChild(titleDiv);
+        div.appendChild(textContainer);
+        bindTapSelect(div, function () {
+          replaySeleccion = i;
+          replayMenuUserScrolled = false;
+          actualizarSeleccionReplay();
+          seleccionarReplay(channelIndex);
+        });
+        replayMenu.appendChild(div);
+      });
+
+      replaySeleccion = replayEventsLocal.length > 0
+        ? Math.max(0, Math.min(replaySeleccionInit, replayEventsLocal.length - 1))
+        : 0;
+      actualizarSeleccionReplay(true);
+
+      if (resetScroll) {
+        replayMenuUserScrolled = false;
+        requestAnimationFrame(function () {
+          scrollRowToCenter(replayMenu, ".replay-row", replaySeleccion);
+        });
+      } else if (preserveScroll && prevScrollTop > 0) {
+        requestAnimationFrame(function () {
+          replayMenu.scrollTop = prevScrollTop;
+        });
+      } else {
+        requestAnimationFrame(function () {
+          scrollRowToCenter(replayMenu, ".replay-row", replaySeleccion);
+        });
+      }
+    }
+
+    function actualizarSeleccionMenu() {
+      const items = menu.querySelectorAll(".channel-row");
+      items.forEach(function (item, i) {
+        item.classList.toggle("active", i === menuSeleccion);
+      });
+      scrollRowToCenter(menu, ".channel-row", menuSeleccion);
+    }
+
+    function actualizarSeleccionReplay(skipScroll) {
+      const items = replayMenu.querySelectorAll(".replay-row");
+      items.forEach(function (item, i) {
+        item.classList.toggle("active", i === replaySeleccion);
+      });
+      if (skipScroll) return;
+      if (replaySeleccion >= 0 && items.length > 0) {
+        replaySeleccion = Math.max(0, Math.min(replaySeleccion, items.length - 1));
+        scrollRowToCenter(replayMenu, ".replay-row", replaySeleccion);
+      }
+    }
+
+    function clearReplaySelectionForChannel(channelIndex) {
+      if (channelIndex >= 0) delete lastSelectedReplayTimestamps[channelIndex];
+    }
+
+    async function selectSpanishTrack() {
+      try {
+        const audioTracks = player.getAudioLanguagesAndRoles();
+        const spanishTrack = audioTracks.find(function (track) {
+          return track.language === "es" || track.language === "spa";
+        });
+        if (spanishTrack) {
+          player.selectAudioLanguage(spanishTrack.language, spanishTrack.role || "");
+        } else {
+          player.selectAudioLanguage("es", "");
+        }
+      } catch (e) {}
+    }
+
+    async function loadStream(url, license_key) {
+      let urlToLoad = url;
+      if (urlToLoad.indexOf("/") === 0) urlToLoad = LIVE_BASE_URL + urlToLoad;
+      await player.unload();
+      await player.attach(videoElement);
+      player.configure({ drm: { clearKeys: license_key || {} } });
+      await player.load(urlToLoad);
+      await selectSpanishTrack();
+      videoElement.play().catch(function () {});
+    }
+
+    async function reproducirCanal(index) {
+      if (!canales[index]) return;
+      closeReplayMenu();
+      currentReplayEvent = null;
+      showChannelChangeOverlay();
+      canalActual = index;
+      lastKnownCanal = index;
+      mostrarInfo(index);
+      try {
+        await loadStream(canales[index].url, canales[index].license_key);
+      } catch (e) {}
+    }
+
+    async function reproducirReplay(event, index) {
+      const replayEntry = getReplayEntryForChannelIndex(index);
+      if (!replayEntry || !replayEntry.url) return;
+      currentReplayEvent = event;
+      const replayUrl = buildReplayManifestUrl(
+        replayEntry,
+        event.start_timestamp,
+        event.stop_timestamp,
+        index
+      );
+      showChannelChangeOverlay();
+      closeReplayMenu();
+      try {
+        const keys = Object.keys(replayEntry.license_key || {}).length
+          ? replayEntry.license_key
+          : (canales[index].license_key || {});
+        await loadStream(replayUrl, keys);
+      } catch (e) {}
+    }
+
+    function seleccionarReplay(channelIndex) {
+      if (channelIndex !== canalActual) return;
+      if (!canalTieneReplay(channelIndex)) return;
+      if (replayEvents.length > 0 && replaySeleccion >= 0 && replaySeleccion < replayEvents.length) {
+        const event = replayEvents[replaySeleccion];
+        lastSelectedReplayTimestamps[canalActual] = event.start_timestamp;
+        if (currentReplayEvent &&
+            event.start_timestamp === currentReplayEvent.start_timestamp &&
+            event.stop_timestamp === currentReplayEvent.stop_timestamp) {
+          closeReplayMenu();
+          return;
+        }
+        reproducirReplay(event, canalActual);
+      }
+    }
+
+    function openReplayMenu() {
+      if (canalActual < 0) return;
+      if (!canalTieneReplay(canalActual)) return;
+      const channelIndex = canalActual;
+      replayMenuChannelIndex = channelIndex;
+      replayMenuUserScrolled = false;
+      replayListSignature = "";
+      renderReplayMenu(replayCache[channelIndex] || [], channelIndex, { resetScroll: true });
+      replayMenu.style.display = "flex";
+      replayVisible = true;
+      if (channelNeedsReplay(channelIndex) || (replayNeverLoaded(channelIndex) && isOnline())) {
+        loadChannelData(channelIndex);
+      }
+    }
+
+    function closeReplayMenu() {
+      replayMenu.style.display = "none";
+      replayVisible = false;
+      replayMenuChannelIndex = -1;
+      replayMenuUserScrolled = false;
+      replayListSignature = "";
+    }
+
+    videoElement.addEventListener("playing", function () {
+      revealVideoPlayer();
+    });
+    videoElement.addEventListener("canplay", function () {
+      if (videoElement.paused) revealVideoPlayer();
+    });
+
+    function mostrarInfo(index) {
+      if (!canales[index]) return;
+      canalInfo.innerHTML = "";
+      const canal = canales[index];
+      const logoImg = document.createElement("img");
+      logoImg.className = "canalLogo";
+      logoImg.alt = (canal.nombre || "") + " logo";
+      setupChannelLogoImage(logoImg, canal.logo);
+      const infoContainer = document.createElement("div");
+      infoContainer.className = "infoContainer";
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "canalName";
+      nameSpan.textContent = canalLabel(canal);
+      const epgDiv = document.createElement("div");
+      epgDiv.className = "epgInfo";
+      epgDiv.innerHTML = "<span><strong>Ahora:</strong> Info. no disponible</span><span><strong>Siguiente:</strong> Info. no disponible</span>";
+      infoContainer.appendChild(nameSpan);
+      infoContainer.appendChild(epgDiv);
+      const rightPanel = document.createElement("div");
+      rightPanel.className = "rightPanel";
+      const dateTimeDiv = document.createElement("div");
+      dateTimeDiv.className = "dateTime";
+      dateTimeDiv.textContent = formatDateTime();
+      rightPanel.appendChild(dateTimeDiv);
+      if (canalTieneReplay(index)) {
+        const replayIndicatorDiv = document.createElement("div");
+        replayIndicatorDiv.className = "replayIndicator";
+        replayIndicatorDiv.textContent = "Replay";
+        rightPanel.appendChild(replayIndicatorDiv);
+      }
+      canalInfo.appendChild(logoImg);
+      canalInfo.appendChild(infoContainer);
+      canalInfo.appendChild(rightPanel);
+      showCanalInfoBar();
+      refreshClockFromAkamai();
+      applyEpgDisplayForChannel(index);
+      if (channelNeedsDataLoad(index) && isOnline()) {
+        loadChannelData(index);
+      }
+    }
+
+    function seleccionarCanal() {
+      if (menuSeleccion < 0) return;
+      menu.style.display = "none";
+      menuVisible = false;
+      if (menuSeleccion !== canalActual) {
+        const canalAnterior = canalActual;
+        if (canalAnterior >= 0) clearReplaySelectionForChannel(canalAnterior);
+        canalActual = menuSeleccion;
+        lastKnownCanal = canalActual;
+        reproducirCanal(canalActual);
+      }
+    }
+
+    function openChannelMenu() {
+      menuSeleccion = canalActual >= 0 ? canalActual : (lastKnownCanal >= 0 ? lastKnownCanal : -1);
+      if (!menu.hasChildNodes()) renderMenuInicial();
+      menu.style.display = "flex";
+      menuVisible = true;
+      repaintAllMenuRowsFromEpgCache();
+      scheduleAllChannelsEpgBarUpdates();
+      actualizarSeleccionMenu();
+      if (isOnline()) {
+        scheduleRetryPendingChannelLoads();
+        refreshMenuLogos();
+      }
+    }
+
+    function bloquearScroll(e) {
+      touchMoved = true;
+      if (!menu.contains(e.target) && !replayMenu.contains(e.target)) e.preventDefault();
+    }
+
+    document.body.addEventListener("touchmove", bloquearScroll, { passive: false });
+    document.body.addEventListener("wheel", bloquearScroll, { passive: false });
+    document.body.addEventListener("touchstart", function (e) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchMoved = false;
+    });
+    document.body.addEventListener("touchend", function (e) {
+      e.preventDefault();
+      const deltaX = e.changedTouches[0].clientX - touchStartX;
+      const deltaY = e.changedTouches[0].clientY - touchStartY;
+      const isInReplayMenu = replayMenu.contains(e.target);
+      const isInMenu = menu.contains(e.target);
+      if (replayVisible && !isInReplayMenu) {
+        closeReplayMenu();
+        return;
+      }
+      if (menuVisible && !isInMenu) {
+        menu.style.display = "none";
+        menuVisible = false;
+        return;
+      }
+      if (!touchMoved && Math.abs(deltaX) < 50 && Math.abs(deltaY) < 50) {
+        if (menuVisible) {
+          menu.style.display = "none";
+          menuVisible = false;
+        } else {
+          openChannelMenu();
+        }
+      } else if (deltaX < -50 && Math.abs(deltaY) < 50 && canalActual >= 0) {
+        if (canalTieneReplay(canalActual)) openReplayMenu();
+      }
+    });
+
+    (async function init() {
+      setupNetworkRecoveryListeners();
+      shaka.polyfill.installAll();
+      await fetchAkamaiTime();
+      paintDateTime();
+      setInterval(refreshClockFromAkamai, 60000);
+      setInterval(paintDateTime, 1000);
+      await loadCanales();
+      await loadReplayList();
+      renderMenuInicial();
+      openChannelMenu();
+    })();
+  </script>
+</body>
+  </html>
