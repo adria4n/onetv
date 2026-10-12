@@ -1,0 +1,12 @@
+  {
+    "Nombre": "Configuración",
+    "Logo": "https://budtv.ottmex.com/assets/section_settings.png"
+  },
+  {
+    "Nombre": "Películas",
+    "Logo": "https://budtv.ottmex.com/assets/sect_mov1.png"
+  },
+  {
+    "Nombre": "Series",
+    "Logo": "https://budtv.ottmex.com/assets/sect_seriesxapp.png"
+  }
