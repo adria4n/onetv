@@ -9,7 +9,7 @@
   {
     "Nombre": "Series",
     "Logo": "https://budtv.ottmex.com/assets/sect_seriesxapp.png"
-  }
+  },
   {
     "Nombre": "TV",
     "Logo": "https://budtv.ottmex.com/assets/sect_live.png"
