@@ -9,7 +9,8 @@
 <body>
 <video id="v" controls autoplay></video>
 <script>
-const u = decodeURIComponent(location.href.split('=')[1] || '');
+const raw = decodeURIComponent(location.href.split('=')[1] || '');
+const u = raw ? 'https://onetv-mx.freedev.app/proxy.php?url=' + encodeURIComponent(raw) : '';
 const v = document.getElementById('v');
 if (u && Hls.isSupported()) {
     const h = new Hls();
