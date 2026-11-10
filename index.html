@@ -18,7 +18,7 @@ if (!u) {
   h.loadSource(u);
   h.attachMedia(v);
   h.on(Hls.Events.MANIFEST_PARSED, () => v.play());
-} else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+} else if (v.canPlayType('application/vnd.apple.mpegul')) {
   v.src = u;
   v.play();
 }
