@@ -1,3 +1,4 @@
 #EXTM3U
-#EXT-X-STREAM-INF:BANDWIDTH=2920544
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080,CODECS="avc3.640029,mp4a.40.2"
 https://dish.akamaized.net/Content/DASH/Live/channel(multimediosplus)/variant.mpd
