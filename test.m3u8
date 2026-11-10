@@ -1,0 +1,4 @@
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720
+http://jr-flix.alwaysdata.net/streams/rqtvpro.php?p=MDAxIE1YOiBMYSBHcmFuamEgVmlwIC8gTGEgR3JhbmphIFZpcCAtIExhIEdhbGEgODozMFBNIC0gQXp0ZWNhIFVubw==&t=p&f=.m3u8
