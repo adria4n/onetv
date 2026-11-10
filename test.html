@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>proxy</title>
+</head>
+<body>
+<script>
+const u = new URLSearchParams(location.search).get('url');
+if (!u) {
+  document.body.textContent = 'Falta ?url=';
+} else {
+  fetch(u, { redirect: 'follow' })
+    .then(r => r.text())
+    .then(text => {
+      let final = u;
+      if (text.includes('#EXTM3U')) {
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+        if (lines.length) final = lines[0].startsWith('http') ? lines[0] : new URL(lines[0], u).href;
+      }
+      const out = `#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=2920544\n${final}`;
+      document.open();
+      document.write(out);
+      document.close();
+    })
+    .catch(() => {
+      const out = `#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=2920544\n${u}`;
+      document.open();
+      document.write(out);
+      document.close();
+    });
+}
+</script>
+</body>
+</html>
