@@ -2,23 +2,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Player</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<style>body{margin:0;background:#000}video{width:100%;height:100vh}</style>
+<title>Redirect</title>
 </head>
 <body>
-<video id="v" controls autoplay></video>
 <script>
-const raw = decodeURIComponent(location.href.split('=')[1] || '');
-const u = raw ? 'https://onetv-mx.freedev.app/proxy.php?url=' + encodeURIComponent(raw) : '';
-const v = document.getElementById('v');
-if (u && Hls.isSupported()) {
-    const h = new Hls();
-    h.loadSource(u);
-    h.attachMedia(v);
-    h.on(Hls.Events.MANIFEST_PARSED, () => v.play());
-} else if (u && v.canPlayType('application/vnd.apple.mpegurl')) {
-    v.src = u;
+const u = decodeURIComponent(location.href.split('=')[1] || '');
+if (u) {
+    location.replace(u);
+} else {
+    document.body.innerHTML = '<p style="font-family:sans-serif;text-align:center;margin-top:20%">No se encontró URL después del =</p>';
 }
 </script>
 </body>
