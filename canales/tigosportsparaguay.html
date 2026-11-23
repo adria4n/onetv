@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+  <video id="video" autoplay controls style="width:100%;height:100vh"></video>
+  <script>
+    var video = document.getElementById('video');
+    var hls = new Hls();
+    hls.loadSource('http://45.170.130.224:8000/play/a04k/index.m3u8?hls');
+    hls.attachMedia(video);
+    video.volume = 1;
+    video.play();
+  </script>
+</body>
+</html>
